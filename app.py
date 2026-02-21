@@ -104,4 +104,4 @@ if unallocated > 0:
     unallocated_ratio = (unallocated / total_amount) * 100 if total_amount > 0 else 0
     st.caption(f"💡 提示：当前策略各项资产比例总计为 {100 - unallocated_ratio:.2f}%。在 ${total_amount:,.2f} 的总投资中，将有 ${unallocated:,.2f} 资金未分配。")
 else:
-    st.caption("✅ 提示：当前策略各项资产比例总计为 100%。资金已完美全部分配！
+    st.caption("✅ 提示：当前策略各项资产比例总计为 100%。资金已完美全部分配！")
