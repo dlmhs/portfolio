@@ -8,6 +8,7 @@ st.title("📊 投资分配提示")
 # 1. 设定总金额和定投天数 (使用并排布局更美观)
 col_input1, col_input2 = st.columns(2)
 with col_input1:
+    # 投资金额输入框也改为了整数步长
     total_amount = st.number_input("请输入计算投资金额 ($):", min_value=0.0, value=7000.0, step=100.0)
 with col_input2:
     expected_days = st.number_input("预计定投天数:", min_value=1, value=14, step=1)
@@ -50,23 +51,24 @@ for category, assets in default_portfolio.items():
         # 计算每日定投金额 (仅限特定的 Crypto，根据动态天数计算)
         if asset in ["BTC", "ETH", "LINK", "SOL"]:
             daily_amt = actual_amt / expected_days
-            daily_str = f"${daily_amt:,.2f} / 天"
+            # 【修改点】.2f 改为 .0f，去掉小数
+            daily_str = f"${daily_amt:,.0f} / 天"
         else:
             daily_str = "-"
         
-        # 【修改点】在这里调整了放入字典的顺序，把策略比例放到了最后
+        # 【修改点】分配金额的 .2f 改为 .0f，策略比例保留小数
         data.append({
             "大类": category,
-            "资产标的": asset,
-            "总分配金额": f"${actual_amt:,.2f}",
+            "标的": asset,
+            "分配金额": f"${actual_amt:,.0f}",
             f"每日定投 ({expected_days}天)": daily_str,
             "策略比例": f"{strategy_ratio * 100:.2f}%"
         })
 
 df = pd.DataFrame(data)
 
-# 显示表格
-st.dataframe(df, use_container_width=True)
+# 隐藏最左侧无用的数字序号列
+st.dataframe(df, use_container_width=True, hide_index=True)
 
 # 4. 计算三大转账汇总
 st.subheader("🏦 转账操作指引")
@@ -82,31 +84,33 @@ to_wallet = calculated_amounts["BTC"] + calculated_amounts["ETH"] + calculated_a
 # To Stock: 整个 Stock 的部分
 to_stock = calculated_amounts["SGOV"] + calculated_amounts["COPX"] + calculated_amounts["TOPT"]
 
-# 使用 metric 组件展示，美观且醒目
+# 【修改点】汇总看板的金额也全部改为 .0f
 col1, col2, col3 = st.columns(3)
-col1.metric("To Coinbase", f"${to_coinbase:,.2f}")
-col2.metric("To Wallet", f"${to_wallet:,.2f}")
-col3.metric("To Stock", f"${to_stock:,.2f}")
+col1.metric("To Coinbase", f"${to_coinbase:,.0f}")
+col2.metric("To Wallet", f"${to_wallet:,.0f}")
+col3.metric("To Stock", f"${to_stock:,.0f}")
 
 # 5. Crypto 每日执行看板 (根据动态天数更新标题和计算)
 st.subheader(f"⏳ Crypto 每日定投执行 ({expected_days} 天)")
 d_col1, d_col2, d_col3, d_col4 = st.columns(4)
-d_col1.metric("BTC 每日", f"${calculated_amounts['BTC'] / expected_days:,.2f}")
-d_col2.metric("ETH 每日", f"${calculated_amounts['ETH'] / expected_days:,.2f}")
-d_col3.metric("LINK 每日", f"${calculated_amounts['LINK'] / expected_days:,.2f}")
-d_col4.metric("SOL 每日", f"${calculated_amounts['SOL'] / expected_days:,.2f}")
+# 【修改点】每日看板金额改为 .0f
+d_col1.metric("BTC 每日", f"${calculated_amounts['BTC'] / expected_days:,.0f}")
+d_col2.metric("ETH 每日", f"${calculated_amounts['ETH'] / expected_days:,.0f}")
+d_col3.metric("LINK 每日", f"${calculated_amounts['LINK'] / expected_days:,.0f}")
+d_col4.metric("SOL 每日", f"${calculated_amounts['SOL'] / expected_days:,.0f}")
 
 # 6. 温馨提示（关于未分配资金）
 st.divider() # 添加一条分割线
 total_allocated = to_coinbase + to_stock
 unallocated = total_amount - total_allocated
 
-# 处理计算机浮点数精度可能导致的微小误差 (比如 -0.00000001)
+# 处理计算机浮点数精度可能导致的微小误差
 if abs(unallocated) < 0.01:
     unallocated = 0.0
 
 if unallocated > 0:
     unallocated_ratio = (unallocated / total_amount) * 100 if total_amount > 0 else 0
-    st.caption(f"💡 提示：当前策略各项资产比例总计为 {100 - unallocated_ratio:.2f}%。在 ${total_amount:,.2f} 的总投资中，将有 ${unallocated:,.2f} 资金未分配。")
+    # 【修改点】提示语里的金额改为 .0f
+    st.caption(f"💡 提示：当前策略各项资产比例总计为 {100 - unallocated_ratio:.2f}%。在 ${total_amount:,.0f} 的总投资中，将有 ${unallocated:,.0f} 资金未分配。")
 else:
     st.caption("✅ 提示：当前策略各项资产比例总计为 100%。资金已完美全部分配！")
